@@ -47,7 +47,10 @@ static char	*ft_strjoin_mod(char *str1, char *str2, size_t i, size_t j)
 
 // read_line_from_fd takes the main_line string and adds to it iteratively
 // until main_line has a '\n' in it. if the main_line already had a '\n'
-// then nothing is read and main_line is returned
+// then nothing is read and main_line is returned.
+// if i didnt run out of space it would be faster to check if leftover has
+// '\n' in it only once, then read if the buffer has a '\n' in the while loop.
+// that would make reading very long lines alot faster.
 static char	*read_line_from_fd(int fd, char *leftover)
 {
 	char	*buffer;
@@ -108,6 +111,7 @@ static char	*set_return(char *main_line)
 // set_leftover takes in main_line and searches it for a '\n'.
 // if a '\n' is found then it copies the rest of the string
 // to leftover.
+// if '\n' is the final char, leftover remains NULL.
 // if no '\n' is found then leftover remains NULL.
 static int	set_leftover(char *main_line, char **leftover)
 {
@@ -116,7 +120,7 @@ static int	set_leftover(char *main_line, char **leftover)
 	i = 0;
 	while (main_line[i] != '\n' && main_line[i])
 		i++;
-	if (main_line[i] == '\n')
+	if (main_line[i] == '\n' && main_line[i + 1] != '\0')
 	{
 		*leftover = ft_strdup(&main_line[i + 1]);
 		if (!*leftover)
@@ -135,6 +139,8 @@ char	*get_next_line(int fd)
 	char		*main_line;
 	char		*return_line;
 
+	if (fd < 0 || BUFFER_SIZE < 1)
+		return (NULL);
 	main_line = read_line_from_fd(fd, leftover);
 	leftover = NULL;
 	if (!main_line)
@@ -157,6 +163,7 @@ char	*get_next_line(int fd)
 
 /* int     main(void)
 {
+	// valid fd test
 # include "stdio.h"
 # include "fcntl.h"
 
@@ -193,4 +200,37 @@ char	*get_next_line(int fd)
 		}
 	}
     close(fd);
+} */
+
+/* int     main(void)
+{
+	// invalid fd test
+# include "stdio.h"
+    char	*line;
+    int		fd = 0;
+	int		lines_to_read = 2;
+	// try fd = 0, 1, 2 for manual inputs from console
+	// leave lines_to_read on 0 for automatic
+
+	printf ("File Descriptor = %d\n", fd);
+	if (lines_to_read <= 0)
+	{
+		printf("Reading lines until end of file is found\n");
+       	while ((line = get_next_line(fd)) != NULL)
+        {
+        	printf("-->%s", line);
+            free(line);
+		}
+	}
+	else
+	{
+		printf("Reading %d Lines from given file\n", lines_to_read);
+		while(lines_to_read > 0)
+		{
+			line = get_next_line(fd);
+			printf("-->%s", line);
+			free(line);
+			lines_to_read--;
+		}
+	}
 } */
